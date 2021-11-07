@@ -127,3 +127,18 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# visual studio
+.vs 
+
+# vs code
+.vscode
+
+# image data 
+*.jpeg
+*.jpg
+*.bmp
+
+# selected files
+WhiteTrack.py
+samplyTesseract.py
