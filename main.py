@@ -120,8 +120,14 @@ def whiteThreshold(image):
     output = cv2.bitwise_and(image,image, mask= mask)
     return output
 
-def initDataframe():
+def binaryThreshold(img, threshold):
+    ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY_INV)
+    return img
 
+def grayscale(img):
+    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+def initDataframe():
     pass
 
 
@@ -201,11 +207,16 @@ def sliceRow(img, x1, x2):
     return img[:, x1:x2]
 
 def preprocess(img):
-    return whiteThreshold(img)
+    img = whiteThreshold(img)
+    img = grayscale(img)
+    # img = cv2.GaussianBlur(img, (7, 7), 0)
+    # img = binaryThreshol d(img, 32)
+    return img
 
 def identifyText(img):
-    data = pytesseract.image_to_data(img)
-    print(data)
+    # data = pytesseract.image_to_data(img)
+    data = pytesseract.image_to_string(img)
+    return data
     
 def processRow(img):
     x_offset = 3182
@@ -220,21 +231,21 @@ def processRow(img):
     x1_location = 4632 - x_offset
     x2_location = 4780 - x_offset
 
-
     item = sliceRow(img, x1_item, x2_item)
-    displayImage(item)
-    
     price = sliceRow(img, x1_price, x2_price)
-    displayImage(price)
-
     available = sliceRow(img, x1_avail, x2_avail)
-    displayImage(available)
-
     timeLeft = sliceRow(img, x1_time, x2_time)
-    displayImage(timeLeft)
-
     location = sliceRow(img, x1_location, x2_location)
-    displayImage(location)
+
+    processThese = [item, price, available, timeLeft, location]
+    row = []
+    for img in processThese:
+        img = preprocess(img)
+        data = identifyText(img)
+        row.append(data)
+    
+    return row
+
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -253,12 +264,22 @@ if __name__ == "__main__":
     x2 = 4780-1920
     y2 = 525
     img = cv2.imread('soul_03.jpeg')
+    rowsData = []
+
     itemsOnScreen = 9
     rowWidth = 103
     offset = 5
+    for i in range(itemsOnScreen):
+        y1 += offset
+        y2 -= offset
+        row = getRow(img, x1, y1, x2, y2)
+        rowData = processRow(row)
+        rowsData.append(rowData)    
+        y1 += rowWidth - offset 
+        y2 += rowWidth + offset
 
-    row = getRow(img, x1, y1, x2, y2)
-    processRow(row)
+    df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
+    print(df)
 
     # price = sliceRow(row, 100, 250)
     # whiteprice = preprocess(price)
