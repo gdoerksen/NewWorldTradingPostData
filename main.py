@@ -9,6 +9,8 @@ import win32gui, win32ui, win32con
 import pytesseract
 from pytesseract import Output
 from datetime import datetime
+import re
+import string
 
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
@@ -218,10 +220,65 @@ def identifyText(img):
     data = pytesseract.image_to_string(img)
     return data
     
+class Row():
+    def __init__(self, img, rowItems=[]):
+        self.img = img
+        self.rowItems = rowItems
+
+
+class RowItem():
+    def __init__(self, left_bound, right_bound, img=None, value=None, pattern=None):
+        self.left_bound = left_bound
+        self.right_bound = right_bound
+        self.img = img
+        self.value = value
+        self.pattern = pattern
+
+def preprocessItem(img):
+    img = whiteThreshold(img)
+    img = grayscale(img)
+    # img = cv2.GaussianBlur(img, (7, 7), 0)
+    # img = binaryThreshol d(img, 32)
+    return img
+
+def identifyTextItem(original_image):
+    attempts = 0
+    while True:
+        img = original_image.copy()
+        img = preprocessItem(img)
+        data = pytesseract.image_to_string(img)
+        data = str.strip(data)
+        print( repr(data))
+
+        if data == "" :
+            continue
+
+
+        match = pattern.match(data)
+        print(match)
+        if match:
+            return data
+        else:
+            return None
+        
+        attempts += 1
+        if attempts > 10:
+            return None
+
+
+
+
 def processRow(img):
+
+
     x_offset = 3182
-    x1_item = 3278 - x_offset
-    x2_item = 3647 - x_offset
+    left_bound = 3278 - x_offset
+    right_bound = 3647 - x_offset
+    # item_pattern = re.compile("/^[a-zA-Z0-9]*$/")
+    # item = RowItem(left_bound, right_bound, pattern=item_pattern)
+    # item.img = sliceRow(img, item.left_bound, item.right_bound)
+    # item.process(processingFunction)
+
     x1_price = 3650 - x_offset
     x2_price = 3838 - x_offset
     x1_avail = 4370 - x_offset
@@ -231,34 +288,68 @@ def processRow(img):
     x1_location = 4632 - x_offset
     x2_location = 4780 - x_offset
 
-    item = sliceRow(img, x1_item, x2_item)
+
+
+    
+
+    item = sliceRow(img, left_bound, right_bound)
     price = sliceRow(img, x1_price, x2_price)
     available = sliceRow(img, x1_avail, x2_avail)
     timeLeft = sliceRow(img, x1_time, x2_time)
     location = sliceRow(img, x1_location, x2_location)
 
+    price_pattern = re.compile("^\$?(([1-9]\d{0,2}(,\d{3})*)|0)?\.\d{1,2}$")
+    item_pattern = re.compile("/^[a-zA-Z0-9]*$/")
+    wholeNumber_pattern = re.compile("/^\d+$/")
+
     processThese = [item, price, available, timeLeft, location]
+    processPatterns = [item_pattern, price_pattern, wholeNumber_pattern, item_pattern, item_pattern ]
+
     row = []
-    for img in processThese:
-        img = preprocess(img)
-        data = identifyText(img)
+
+    row = []
+    for img, pattern in zip(processThese, processPatterns):
+        data = process(img, pattern)
         row.append(data)
-    
     return row
 
+text = pytesseract.image_to_string(Image.open("temp.jpg"), lang='eng',
+                        config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
 
-if __name__ == "__main__":
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    # windowCaptureRealtime()
-    # listWindowNames()
-    # windowCaptureSave('Yeet')
-    # tesseractTest()
+data = pytesseract.image_to_data(img, output_type=Output.DICT)
 
-    # img = cv2.imread('soul_03.jpeg')
-    # tesseractTest(whiteThreshold(img))
 
-    # drawRows()
+def process(img, pattern):
+    # original = img.copy()
+    img = whiteThreshold(img)
+    img = grayscale(img)
+    # img = cv2.GaussianBlur(img, (7, 7), 0)
+    # img = binaryThreshol d(img, 32)
+    data = pytesseract.image_to_string(img)
+    data = str.strip(data)
+    # data = data.translate(str.maketrans('', '', string.punctuation))
+    print( repr(data))
+    if data == "":
+        #TODO no text detected, need to tune processing
+        return None
 
+    match = pattern.match(data)
+    print(match)
+    if match:
+        return data
+    else:
+        return None
+
+
+
+def defineRegularExpression():
+    price_pattern = re.compile("^\$?(([1-9]\d{0,2}(,\d{3})*)|0)?\.\d{1,2}$")
+    test = "0.01"
+    match = price_pattern.fullmatch(test)
+    if match:
+        print(match)
+
+def main():
     x1 = 3182-1920
     y1 = 423
     x2 = 4780-1920
@@ -281,33 +372,16 @@ if __name__ == "__main__":
     df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
     print(df)
 
-    # price = sliceRow(row, 100, 250)
-    # whiteprice = preprocess(price)
-    # identifyText(whiteprice)
-    # displayImage(whiteprice)
-    
-    
-    
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # ret, thresh1 = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
-    # thresh = cv2.bitwise_not(thresh1)
+if __name__ == "__main__":
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    # windowCaptureRealtime()
+    # listWindowNames()
+    # windowCaptureSave('Yeet')
+    # tesseractTest()
+    # drawRows()
 
-    # x = 4002-1920
-    # y = 379
-    # x2 = 4089-1920
-    # y2 = 420
-    # w = x2-x
-    # h = y2-y
-    # cropped = thresh[y:y + h, x:x + w]
-    
-    # file = open("recognized.txt", "a")
-    # text = pytesseract.image_to_string(cropped)
-    # file.write(text)
-    # file.write("\n")
-    # file.close
-
-    # cv2.imshow('img', cropped)
-    # cv2.waitKey(0)
+    main()
+    # defineRegularExpression()
 
 
 
@@ -361,3 +435,6 @@ Steps
  Place into database
 
 '''
+
+# TODO first item is always lowest price, can you use this info as a contstraint
+# TODO manually check first row for correct information? 
