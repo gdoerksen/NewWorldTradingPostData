@@ -106,9 +106,9 @@ def tesseractTest(img):
     cv2.imshow('img', img)
     cv2.waitKey(0)
 
-def whiteThreshold(image):
+def whiteThreshold(image, vMin=78):
     hMin = sMin = 0
-    vMin = 78
+    vMin = vMin
     hMax = 179
     sMax = vMax = 255
 
@@ -234,89 +234,184 @@ class RowItem():
         self.value = value
         self.pattern = pattern
 
-def preprocessItem(img):
-    img = whiteThreshold(img)
+def preprocessItem(img, vMin):
+    img = whiteThreshold(img, vMin)
     img = grayscale(img)
     # img = cv2.GaussianBlur(img, (7, 7), 0)
     # img = binaryThreshol d(img, 32)
     return img
 
+def getTextFromData(data):
+    text = ''
+    for i in range(len(data['level'])):
+        if float(data['conf'][i]) > 90.0:        #TODO -1 in conf means multi-word....
+            text += (data["text"][i] + ' ')
+    text = str.strip(text)
+    return text
+
 def identifyTextItem(original_image):
     attempts = 0
-    while True:
+    max_attempts = 5
+    vMin_max = 80
+    vMin = vMin_max
+    while (attempts < max_attempts):
         img = original_image.copy()
-        img = preprocessItem(img)
-        data = pytesseract.image_to_string(img)
-        data = str.strip(data)
-        print( repr(data))
+        img = preprocessItem(img, vMin)
+        data = pytesseract.image_to_data(img, lang='eng',
+                config='--psm 7',output_type=Output.DICT)
+                # psm 7 - Treat the image as a single text line.
 
-        if data == "" :
-            continue
-
-
-        match = pattern.match(data)
-        print(match)
-        if match:
-            return data
-        else:
-            return None
-        
+        text = getTextFromData(data)
+        # print( repr(data))
         attempts += 1
-        if attempts > 10:
-            return None
+        
+        if text == "":
+            vMin -= 10 
+            continue
+        else:
+            return text
+    return None
+
+        # n_boxes = len(d['level'])
+        # for i in range(n_boxes):
+        #     (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
+        #     cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
 
+        # match = pattern.match(data)
+        # print(match)
+        # if match:
+        #     return data
+        # else:
+        #     return None
 
+def identifyTextPrice(original_image):
+    attempts = 0
+    max_attempts = 5
+    vMin_max = 80
+    vMin = vMin_max
+    pattern = re.compile(r"^\$?(([1-9]\d{0,2}(,\d{3})*)|0)?\.\d{1,2}$")
+    while (attempts < max_attempts):
+        img = original_image.copy()
+        img = preprocessItem(img, vMin)
+        data = pytesseract.image_to_data(img, lang='eng',
+                config='--psm 7 -c tessedit_char_whitelist=0123456789.,',output_type=Output.DICT)
+                # psm 7 - Treat the image as a single text line.
+
+        text = getTextFromData(data)
+        # print( repr(data))
+        attempts += 1
+        
+        if (text == "") or ( not pattern.fullmatch(text)):
+            vMin -= 10 
+            continue
+        else:
+            return text
+    return None
+
+def identifyTextAvail(original_image):
+    attempts = 0
+    max_attempts = 5
+    vMin_max = 80
+    vMin = vMin_max
+    pattern = re.compile(r"^[0-9]+$")
+    while (attempts < max_attempts):
+        img = original_image.copy()
+        img = preprocessItem(img, vMin)
+        data = pytesseract.image_to_data(img, lang='eng',
+                config='--psm 7 -c tessedit_char_whitelist=0123456789',output_type=Output.DICT)
+                # psm 7 - Treat the image as a single text line.
+
+        text = getTextFromData(data)
+        attempts += 1
+        
+        if (text == "") or ( not pattern.match(text)):
+            vMin -= 10 
+            continue
+        else:
+            return text
+    return None
+
+def identifyTextTime(original_image):
+    attempts = 0
+    max_attempts = 5
+    vMin_max = 80
+    vMin = vMin_max
+    # pattern = re.compile(r"^[0-9]+$") #TODO define a regex match 
+    while (attempts < max_attempts):
+        img = original_image.copy()
+        img = preprocessItem(img, vMin)
+        data = pytesseract.image_to_data(img, lang='eng',
+                config='--psm 7 -c tessedit_char_whitelist=0123456789DdHhMmSs',output_type=Output.DICT)
+                # psm 7 - Treat the image as a single text line.
+
+        text = getTextFromData(data)
+        attempts += 1
+        # or ( not pattern.match(text))
+        if (text == "") :
+            vMin -= 10 
+            continue
+        else:
+            return text
+    return None
+
+def identifyTextLocation(original_image):
+    attempts = 0
+    max_attempts = 5
+    vMin_max = 80
+    vMin = vMin_max
+    pattern = ["Windsward", "Monarch's Bluffs"]
+    while (attempts < max_attempts):
+        img = original_image.copy()
+        img = preprocessItem(img, vMin)
+        data = pytesseract.image_to_data(img, lang='eng',
+                config="--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\\'",
+                output_type=Output.DICT)
+                # psm 7 - Treat the image as a single text line.
+
+        text = getTextFromData(data)
+        attempts += 1
+        # or ( not pattern.match(text))
+        if (text == "") or (text not in pattern):
+            vMin -= 10 
+            continue
+        else:
+            return text
+    return None
 
 def processRow(img):
 
+    row = []
 
     x_offset = 3182
     left_bound = 3278 - x_offset
     right_bound = 3647 - x_offset
-    # item_pattern = re.compile("/^[a-zA-Z0-9]*$/")
-    # item = RowItem(left_bound, right_bound, pattern=item_pattern)
-    # item.img = sliceRow(img, item.left_bound, item.right_bound)
-    # item.process(processingFunction)
-
-    x1_price = 3650 - x_offset
-    x2_price = 3838 - x_offset
-    x1_avail = 4370 - x_offset
-    x2_avail = 4452 - x_offset
-    x1_time = 4545 - x_offset
-    x2_time = 4629 - x_offset
-    x1_location = 4632 - x_offset
-    x2_location = 4780 - x_offset
-
-
-
-    
-
     item = sliceRow(img, left_bound, right_bound)
-    price = sliceRow(img, x1_price, x2_price)
-    available = sliceRow(img, x1_avail, x2_avail)
-    timeLeft = sliceRow(img, x1_time, x2_time)
-    location = sliceRow(img, x1_location, x2_location)
+    row.append(identifyTextItem(item))
 
-    price_pattern = re.compile("^\$?(([1-9]\d{0,2}(,\d{3})*)|0)?\.\d{1,2}$")
-    item_pattern = re.compile("/^[a-zA-Z0-9]*$/")
-    wholeNumber_pattern = re.compile("/^\d+$/")
+    left_bound = 3650 - x_offset
+    right_bound = 3838 - x_offset
+    price = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextPrice(price))
 
-    processThese = [item, price, available, timeLeft, location]
-    processPatterns = [item_pattern, price_pattern, wholeNumber_pattern, item_pattern, item_pattern ]
+    left_bound = 4370 - x_offset
+    right_bound = 4452 - x_offset
+    quantity_available = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextAvail(quantity_available))
 
-    row = []
+    left_bound = 4545 - x_offset
+    right_bound = 4629 - x_offset
+    time_left = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextTime(time_left))
 
-    row = []
-    for img, pattern in zip(processThese, processPatterns):
-        data = process(img, pattern)
-        row.append(data)
+    left_bound = 4632 - x_offset
+    right_bound = 4780 - x_offset
+    location = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextLocation(location))
+
     return row
 
-text = pytesseract.image_to_string(Image.open("temp.jpg"), lang='eng',
-                        config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
 
-data = pytesseract.image_to_data(img, output_type=Output.DICT)
 
 
 def process(img, pattern):
@@ -326,6 +421,8 @@ def process(img, pattern):
     # img = cv2.GaussianBlur(img, (7, 7), 0)
     # img = binaryThreshol d(img, 32)
     data = pytesseract.image_to_string(img)
+    # data = pytesseract.image_to_string(img, lang='eng',
+                        # config='--psm 7',output_type=Output.DICT)
     data = str.strip(data)
     # data = data.translate(str.maketrans('', '', string.punctuation))
     print( repr(data))
@@ -438,3 +535,4 @@ Steps
 
 # TODO first item is always lowest price, can you use this info as a contstraint
 # TODO manually check first row for correct information? 
+# TODO mine the New World database to only include words that are actually contained within the game
