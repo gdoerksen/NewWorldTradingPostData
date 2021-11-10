@@ -65,7 +65,6 @@ def windowCaptureRealtime():
         print('FPS {}'.format( 1 / (time() - loop_time)))
         loop_time = time()
 
-
         # press q to quit
         if cv2.waitKey(1) == ord('q'):
             cv2.destroyAllWindows()
@@ -76,21 +75,9 @@ def windowCaptureSave(filename):
     # im = Image.fromarray(screenshot).convert('RGB')
     im = screenshot = ImageGrab.grab()
     im.save(filename + '.jpeg')
-    # TODO Color channels are wrong currently, Orange = Blue
-
-def cropImage(img, rectangle):
-    r = rectangle
-    x = r.x
-    y = r.y
-    h = r.h
-    w = r.w
-    cropped = img[y:y + h, x:x + w]
-    return cropped
-    
+    # TODO Color channels are wrong currently, Orange = Blue 
 
 def tesseractTest(img):
-    # img = cv2.imread('soul_03.jpeg')
-
     # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # thresh, img_bin = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     # gray = cv2.bitwise_not(img_bin)
@@ -129,49 +116,6 @@ def binaryThreshold(img, threshold):
 def grayscale(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-def initDataframe():
-    pass
-
-
-def initGather():
-    now = datetime.now()
-    timeStart = now
-    timeCurrent = []
-    name = []
-    price = []
-    tier = []
-    rarity = []
-    available = []
-    owned = []
-    timeLeftOnMarket = []
-    location = []
-
-def loopThroughImage():
-    # test by drawing boxes to see what is getting captured
-    itemsOnScreen = 9
-
-    x1 = 3182-1920
-    y1 = 379
-    x2 = 3647-1920
-    y2 = 420
-    
-    x1 = 3182-1920
-    y1 = 423
-    x2 = 3647-1920
-    y2 = 526
-
-    box1 = squareCrop(x1, y1, x2, y2)
-
-
-class squareCrop:
-    def __init__(self, x1: int, y1: int, x2: int, y2: int):
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
-        self.w = x2 - x1
-        self.h = y2 - y1
-
 
 def drawSquareOnImage(img, x1: int, y1: int, x2: int, y2: int):
     green = (0, 255, 0)
@@ -201,19 +145,11 @@ def drawRows():
         y2 += rowWidth + offset
     displayImage(img)
 
-
 def getRow(img, x1, y1, x2, y2):
     return img[y1:y2, x1:x2]
 
 def sliceRow(img, x1, x2):
     return img[:, x1:x2]
-
-def preprocess(img):
-    img = whiteThreshold(img)
-    img = grayscale(img)
-    # img = cv2.GaussianBlur(img, (7, 7), 0)
-    # img = binaryThreshol d(img, 32)
-    return img
 
 def identifyText(img):
     # data = pytesseract.image_to_data(img)
@@ -276,14 +212,6 @@ def identifyTextItem(original_image):
         # for i in range(n_boxes):
         #     (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
         #     cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-
-        # match = pattern.match(data)
-        # print(match)
-        # if match:
-        #     return data
-        # else:
-        #     return None
 
 def identifyTextPrice(original_image):
     attempts = 0
@@ -412,33 +340,6 @@ def processRow(img):
     return row
 
 
-
-
-def process(img, pattern):
-    # original = img.copy()
-    img = whiteThreshold(img)
-    img = grayscale(img)
-    # img = cv2.GaussianBlur(img, (7, 7), 0)
-    # img = binaryThreshol d(img, 32)
-    data = pytesseract.image_to_string(img)
-    # data = pytesseract.image_to_string(img, lang='eng',
-                        # config='--psm 7',output_type=Output.DICT)
-    data = str.strip(data)
-    # data = data.translate(str.maketrans('', '', string.punctuation))
-    print( repr(data))
-    if data == "":
-        #TODO no text detected, need to tune processing
-        return None
-
-    match = pattern.match(data)
-    print(match)
-    if match:
-        return data
-    else:
-        return None
-
-
-
 def defineRegularExpression():
     price_pattern = re.compile("^\$?(([1-9]\d{0,2}(,\d{3})*)|0)?\.\d{1,2}$")
     test = "0.01"
@@ -480,28 +381,6 @@ if __name__ == "__main__":
     main()
     # defineRegularExpression()
 
-
-
-'''
-Price "XXXX.XX" 
-Tier = ["I", "II", "III", "IV", "V"] 
-G.S.: Number or -
-Gem: 
-Perk: "Symbols so don't do this one"
-RarityList = ["Common", "Uncommon", "Rare", "Epic", "Legendary" ]
-Avail.: Integer  
-Owned: Integer
-Time: ["2d", "1m", "1h"]
-Location = ["Windsward", "Monarch's Bluff", ]
-'''
-
-# Could use regex probably
-
-# could tune the thresholding value over time
-# Honestly just do a for loop perhaps? 
-
-# Binary search for thresholding value? 
-
 '''
 Ojbective
 * Get the global prices of soul motes 
@@ -531,8 +410,22 @@ Steps
 
  Place into database
 
+
+Price "XXXX.XX" 
+Tier = ["I", "II", "III", "IV", "V"] 
+G.S.: Number or -
+Gem: 
+Perk: "Symbols so don't do this one"
+RarityList = ["Common", "Uncommon", "Rare", "Epic", "Legendary" ]
+Avail.: Integer  
+Owned: Integer
+Time: ["2d", "1m", "1h"]
+Location = ["Windsward", "Monarch's Bluff", ]
+
 '''
 
 # TODO first item is always lowest price, can you use this info as a contstraint
 # TODO manually check first row for correct information? 
 # TODO mine the New World database to only include words that are actually contained within the game
+    # would be hilarious to make a massive hash table that included every possible game item
+# TODO Add checking to determine if we've slightly misspelled one of the words we're looking for 
