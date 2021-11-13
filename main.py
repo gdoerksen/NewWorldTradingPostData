@@ -432,9 +432,11 @@ def singleItemData(img):
     df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
     print(df)
 
-def getToItemScreen(target_item):
+def openTradingPost():
     pyautogui.click(50,50)
     pyautogui.press('f')
+
+def getToItemScreen(target_item):
     # pyautogui.click(759,297,duration=0.3)
     pyautogui.moveTo(759, 297, duration=0.4, tween=pyautogui.easeInOutQuad)
     pyautogui.click()
@@ -444,6 +446,23 @@ def getToItemScreen(target_item):
     pyautogui.moveTo(721, 478, duration=0.35, tween=pyautogui.easeInOutQuad)
     pyautogui.click(interval=0.3)
     time.sleep(2) # need to wait for the screen to load
+
+def getMinimumPrice(img):
+    x1 = 3182-1920
+    y1 = 423
+    x2 = 4780-1920
+    y2 = 525
+    # img = cv2.imread('soul_03.jpeg')
+    rowsData = []
+    itemsOnScreen = 9
+    rowWidth = 103
+    offset = 5
+    
+    y1 += offset
+    y2 -= offset
+    row = getRow(img, x1, y1, x2, y2)
+    rowData = processRow(row)
+    return rowData
 
 
 if __name__ == "__main__":
@@ -456,17 +475,36 @@ if __name__ == "__main__":
     # tesseractTest()
     # drawRows()
 
-    getToItemScreen("soul mote")
-    img = windowCapture()
-    cv2.imwrite("test.jpeg",img)
+    items_arcana_types = ['mote', 'wisp', 'essence', 'quintessence']
+    items_arcana_elements = ['life', 'death', 'soul', 'fire', 'earth', 'air', 'water']
+
+    openTradingPost()
+
+    rowsData = []
+    for element_type in items_arcana_elements:
+        for tier_type in items_arcana_types:
+            target_item = element_type + ' ' + tier_type
+            getToItemScreen(target_item)
+            img = windowCapture()
+            cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
+            rowData = getMinimumPrice(img)
+            rowsData.append(rowData)
+
+    df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
+    print(df)
+    
+    # getToItemScreen("soul mote")
+    # img = windowCapture()
+    # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
     # getMeThatData(img)
-    singleItemData(img)
+    # singleItemData(img)
 
     # print(pyautogui.size())
     # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
     # pyautogui.alert('This is the message to display.')
     # pyautogui.confirm(text='U good bro?', title='Wazzz up', buttons=['OK', 'Cancel'])
     # print(pyautogui.position())
+
 
 
 '''
