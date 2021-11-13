@@ -11,8 +11,10 @@ from pytesseract import Output
 from datetime import datetime
 import re
 import string
-
+import time
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+
+
 
 def listWindowNames():
     def winEnumHandler(hwnd, ctx):
@@ -347,12 +349,12 @@ def defineRegularExpression():
     if match:
         print(match)
 
-def main():
+def getMeThatData(img):
     x1 = 3182-1920
     y1 = 423
     x2 = 4780-1920
     y2 = 525
-    img = cv2.imread('soul_03.jpeg')
+    # img = cv2.imread('soul_03.jpeg')
     rowsData = []
 
     itemsOnScreen = 9
@@ -370,16 +372,43 @@ def main():
     df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
     print(df)
 
+
+
+def getToItemScreen(target_item):
+    pyautogui.click(50,50)
+    pyautogui.press('f')
+    # pyautogui.click(759,297,duration=0.3)
+    pyautogui.moveTo(759, 297, duration=0.4, tween=pyautogui.easeInOutQuad)
+    pyautogui.click()
+    pyautogui.click()
+    # time.sleep(0.53)
+    pyautogui.write(target_item,interval=0.23)
+    pyautogui.moveTo(721, 478, duration=0.35, tween=pyautogui.easeInOutQuad)
+    pyautogui.click(interval=0.3)
+    time.sleep(2) # need to wait for the screen to load
+
+
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    screenWidth, screenHeight = pyautogui.size() # Get the size of the primary monitor.
+    currentMouseX, currentMouseY = pyautogui.position() # Get the XY position of the mouse.
     # windowCaptureRealtime()
     # listWindowNames()
     # windowCaptureSave('Yeet')
     # tesseractTest()
     # drawRows()
 
-    main()
-    # defineRegularExpression()
+    getToItemScreen("soul mote")
+    img = windowCapture()
+    cv2.imwrite("test.jpeg",img)
+    getMeThatData(img)
+
+    # print(pyautogui.size())
+    # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
+    # pyautogui.alert('This is the message to display.')
+    # pyautogui.confirm(text='U good bro?', title='Wazzz up', buttons=['OK', 'Cancel'])
+    # print(pyautogui.position())
+
 
 '''
 Ojbective
