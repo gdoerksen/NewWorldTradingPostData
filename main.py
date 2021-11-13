@@ -341,6 +341,34 @@ def processRow(img):
 
     return row
 
+def processRowWithoutItem(img, item_name):
+
+    row = []
+    row.append(item_name)
+
+    x_offset = 3182
+
+    left_bound = 3650 - x_offset
+    right_bound = 3838 - x_offset
+    price = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextPrice(price))
+
+    left_bound = 4370 - x_offset
+    right_bound = 4452 - x_offset
+    quantity_available = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextAvail(quantity_available))
+
+    left_bound = 4545 - x_offset
+    right_bound = 4629 - x_offset
+    time_left = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextTime(time_left))
+
+    left_bound = 4632 - x_offset
+    right_bound = 4780 - x_offset
+    location = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextLocation(location))
+
+    return row
 
 def defineRegularExpression():
     price_pattern = re.compile("^\$?(([1-9]\d{0,2}(,\d{3})*)|0)?\.\d{1,2}$")
@@ -372,7 +400,37 @@ def getMeThatData(img):
     df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
     print(df)
 
+def singleItemData(img):
+    x1 = 3182-1920
+    y1 = 423
+    x2 = 4780-1920
+    y2 = 525
+    # img = cv2.imread('soul_03.jpeg')
+    rowsData = []
 
+    itemsOnScreen = 9
+    rowWidth = 103
+    offset = 5
+    
+    y1 += offset
+    y2 -= offset
+    row = getRow(img, x1, y1, x2, y2)
+    rowData = processRow(row)
+    item_name = rowData[0]
+    rowsData.append(rowData)    
+    y1 += rowWidth - offset 
+    y2 += rowWidth + offset
+    for i in range(itemsOnScreen-1):
+        y1 += offset
+        y2 -= offset
+        row = getRow(img, x1, y1, x2, y2)
+        rowData = processRowWithoutItem(row, item_name)
+        rowsData.append(rowData)    
+        y1 += rowWidth - offset 
+        y2 += rowWidth + offset
+
+    df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
+    print(df)
 
 def getToItemScreen(target_item):
     pyautogui.click(50,50)
@@ -401,7 +459,8 @@ if __name__ == "__main__":
     getToItemScreen("soul mote")
     img = windowCapture()
     cv2.imwrite("test.jpeg",img)
-    getMeThatData(img)
+    # getMeThatData(img)
+    singleItemData(img)
 
     # print(pyautogui.size())
     # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
