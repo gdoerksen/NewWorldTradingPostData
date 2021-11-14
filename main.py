@@ -12,6 +12,7 @@ from datetime import datetime
 import re
 import string
 import time
+from sklearn.cluster import KMeans
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
 
@@ -146,6 +147,9 @@ def drawRows():
         y1 += rowWidth - offset 
         y2 += rowWidth + offset
     displayImage(img)
+
+def crop(img, x1, y1, x2, y2):
+    return img[y1:y2, x1:x2]
 
 def getRow(img, x1, y1, x2, y2):
     return img[y1:y2, x1:x2]
@@ -495,6 +499,39 @@ def getMinimumPriceOfAllArcana():
     df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
     print(df)
 
+
+def isTradingPostOpen():
+    '''
+    The in-game header bar is blue when the Trading Post is open.
+    Returns True if the difference of the root-mean-square of the 
+    average color is less than 1. This works because of how blue
+    the header bar is 
+    '''
+    x1=1530
+    y1=14
+    x2=1994
+    y2=106
+    # cv2.imwrite('trading_post_header.jpeg',img)
+
+    img = windowCapture()
+    img = crop(img,x1,y1,x2,y2)
+
+    img_header = cv2.imread('trading_post_header.jpeg')
+
+    average = img.mean(axis=0).mean(axis=0)
+    average_header = img_header.mean(axis=0).mean(axis=0)
+
+    delta = 0
+    for c1, c2 in zip(average, average_header):
+        delta += (c2-c1)*(c2-c1)
+    delta = delta**0.5
+    
+    if delta <= 1:
+        return True
+    else:
+        return False        
+
+
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # screenWidth, screenHeight = pyautogui.size() # Get the size of the primary monitor.
@@ -506,8 +543,8 @@ if __name__ == "__main__":
     # drawRows()
 
     pyautogui.click(50,50)
-    selectAllSettlements()
-
+    if isTradingPostOpen():
+        selectAllSettlements()
     
     # getToItemScreen("soul mote")
     # img = windowCapture()
@@ -526,6 +563,7 @@ if __name__ == "__main__":
 Today
 
 * check that trading post is open
+    * check that top bar is blue
 * saving and loading database
 * timestamping database entries 
 * multi-threading or CUDA for OCR
