@@ -436,6 +436,18 @@ def openTradingPost():
     pyautogui.click(50,50)
     pyautogui.press('f')
 
+def selectAllSettlements():
+    click_duration = 0.2
+    pyautogui.moveTo(2608, 193, duration=click_duration, tween=pyautogui.easeInOutQuad)
+    pyautogui.click(interval=click_duration)
+    pyautogui.moveTo(2892, 233, duration=click_duration, tween=pyautogui.easeInOutQuad)
+    pyautogui.click(interval=click_duration)
+    pyautogui.moveTo(2656, 253, duration=click_duration, tween=pyautogui.easeInOutQuad)
+    pyautogui.click(interval=click_duration)
+    pyautogui.moveTo(2608, 193, duration=click_duration, tween=pyautogui.easeInOutQuad)
+    pyautogui.click(interval=click_duration)
+    
+
 def getToItemScreen(target_item):
     # pyautogui.click(759,297,duration=0.3)
     pyautogui.moveTo(759, 297, duration=0.4, tween=pyautogui.easeInOutQuad)
@@ -464,17 +476,7 @@ def getMinimumPrice(img):
     rowData = processRow(row)
     return rowData
 
-
-if __name__ == "__main__":
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    screenWidth, screenHeight = pyautogui.size() # Get the size of the primary monitor.
-    currentMouseX, currentMouseY = pyautogui.position() # Get the XY position of the mouse.
-    # windowCaptureRealtime()
-    # listWindowNames()
-    # windowCaptureSave('Yeet')
-    # tesseractTest()
-    # drawRows()
-
+def getMinimumPriceOfAllArcana():
     items_arcana_types = ['mote', 'wisp', 'essence', 'quintessence']
     items_arcana_elements = ['life', 'death', 'soul', 'fire', 'earth', 'air', 'water']
 
@@ -492,6 +494,20 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
     print(df)
+
+if __name__ == "__main__":
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    # screenWidth, screenHeight = pyautogui.size() # Get the size of the primary monitor.
+    # currentMouseX, currentMouseY = pyautogui.position() # Get the XY position of the mouse.
+    # windowCaptureRealtime()
+    # listWindowNames()
+    # windowCaptureSave('Yeet')
+    # tesseractTest()
+    # drawRows()
+
+    pyautogui.click(50,50)
+    selectAllSettlements()
+
     
     # getToItemScreen("soul mote")
     # img = windowCapture()
@@ -503,8 +519,18 @@ if __name__ == "__main__":
     # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
     # pyautogui.alert('This is the message to display.')
     # pyautogui.confirm(text='U good bro?', title='Wazzz up', buttons=['OK', 'Cancel'])
-    # print(pyautogui.position())
+    print(pyautogui.position())
 
+
+'''
+Today
+
+* check that trading post is open
+* saving and loading database
+* timestamping database entries 
+* multi-threading or CUDA for OCR
+* build a test suite
+'''
 
 
 '''
@@ -533,8 +559,6 @@ Steps
 
 * save data into database
 * generate report
-
- Place into database
 
 
 Price "XXXX.XX" 
