@@ -8,7 +8,7 @@ from PIL import ImageGrab, Image
 import win32gui, win32ui, win32con
 import pytesseract
 from pytesseract import Output
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 import string
 import time
@@ -456,14 +456,14 @@ def selectAllSettlements():
 
 def getToItemScreen(target_item):
     # pyautogui.click(759,297,duration=0.3)
-    pyautogui.moveTo(759, 297, duration=0.4, tween=pyautogui.easeInOutQuad)
+    pyautogui.moveTo(759, 297, duration=0.2, tween=pyautogui.easeInOutQuad)
     pyautogui.click()
     pyautogui.click()
     # time.sleep(0.53)
-    pyautogui.write(target_item,interval=0.23)
-    pyautogui.moveTo(721, 478, duration=0.35, tween=pyautogui.easeInOutQuad)
+    pyautogui.write(target_item,interval=0.1)
+    pyautogui.moveTo(721, 478, duration=0.2, tween=pyautogui.easeInOutQuad)
     pyautogui.click(interval=0.3)
-    time.sleep(2) # need to wait for the screen to load
+    time.sleep(1.5) # need to wait for the screen to load
     #TODO adjust this wait time
 
 def getMinimumPrice(img):
@@ -479,12 +479,14 @@ def getMinimumPrice(img):
     rowData = processRow(row)
     return rowData
 
-def getMinimumPriceOfAllArcana():
+def getMinimumPriceOfAllArcana(database):
+    datetime_start = datetime.now(timezone.utc)
+
     items_arcana_types = ['mote', 'wisp', 'essence', 'quintessence']
     items_arcana_elements = ['life', 'death', 'soul', 'fire', 'earth', 'air', 'water']
 
-    items_arcana_types = ['mote']
-    items_arcana_elements = ['life', 'death']
+    # items_arcana_types = ['mote']
+    # items_arcana_elements = ['life', 'death']
 
     rowsData = []
     for element_type in items_arcana_elements:
@@ -492,16 +494,22 @@ def getMinimumPriceOfAllArcana():
             target_item = element_type + ' ' + tier_type
             getTradingPost()
             getToItemScreen(target_item)
+            datetime_now = datetime.now(timezone.utc)
             img = windowCapture()
             # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
             rowData = getMinimumPrice(img)
+            rowData.insert(0,datetime_now)
+            rowData.insert(0,datetime_start)
             rowsData.append(rowData)
 
-    df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
-    print(df)
+    # database = pd.DataFrame(rowsData, columns=["Start Time", "Time", "Name", "Price", "Amount Available", "Time Available", "Location"])
+    update_database = pd.DataFrame(rowsData, columns=["Start Time", "Time", "Name", "Price", "Amount Available", "Time Available", "Location"])
+    database = pd.concat( [database, update_database], ignore_index=True, sort=False )
+    saveDatabase(database)
+    print(database)
 
 
-def isTradingPostOpen():
+def isTradingPostOpen(): 
     '''
     The in-game header bar is blue when the Trading Post is open.
     Returns True if the difference of the root-mean-square of the 
@@ -544,6 +552,12 @@ def getTradingPost():
             openTradingPost()
             time.sleep(2)
             
+def loadDatabase():
+    #TODO transfer to JSON files 
+    return pd.read_pickle("./database.pkl")
+
+def saveDatabase(db):
+    db.to_pickle("./database.pkl")
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -554,11 +568,14 @@ if __name__ == "__main__":
     # windowCaptureSave('Yeet')
     # tesseractTest()
     # drawRows()
-    # pyautogui.click(50,50)
 
-    getTradingPost()
-    selectAllSettlements()
-    getMinimumPriceOfAllArcana()
+    database = loadDatabase()
+    print(database)
+
+    # pyautogui.click(50,50)
+    # getTradingPost()
+    # selectAllSettlements()
+    # getMinimumPriceOfAllArcana(database)
     
     # getToItemScreen("soul mote")
     # img = windowCapture()
@@ -575,8 +592,9 @@ if __name__ == "__main__":
 
 '''
 Today
-* saving and loading database
-* timestamping database entries 
+
+
+* finding highest local buy order 
 * multi-threading or CUDA for OCR
 * build a test suite
 '''
