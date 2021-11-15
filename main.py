@@ -294,7 +294,11 @@ def identifyTextLocation(original_image):
     max_attempts = 5
     vMin_max = 80
     vMin = vMin_max
-    pattern = ["Windsward", "Monarch's Bluffs"]
+    pattern = ["Brightwood", "Cleave's Point", "Cutlass Keys",
+    "Eastburn", "Ebonscale Reach", "Everfall", "First Light",
+    "Last Stand", "Monarch's Bluffs", "Mountainhome",
+    "Mountainrise", "Mourningdale", "Reekwater", "Restless Shore"
+    "Valor Hold", "Weaver's Fen", "Windsward"]
     while (attempts < max_attempts):
         img = original_image.copy()
         img = preprocessItem(img, vMin)
@@ -436,9 +440,7 @@ def singleItemData(img):
     df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available", "Time Available", "Location"])
     print(df)
 
-def openTradingPost():
-    pyautogui.click(50,50)
-    pyautogui.press('f')
+
 
 def selectAllSettlements():
     click_duration = 0.2
@@ -462,6 +464,7 @@ def getToItemScreen(target_item):
     pyautogui.moveTo(721, 478, duration=0.35, tween=pyautogui.easeInOutQuad)
     pyautogui.click(interval=0.3)
     time.sleep(2) # need to wait for the screen to load
+    #TODO adjust this wait time
 
 def getMinimumPrice(img):
     x1 = 3182-1920
@@ -469,11 +472,7 @@ def getMinimumPrice(img):
     x2 = 4780-1920
     y2 = 525
     # img = cv2.imread('soul_03.jpeg')
-    rowsData = []
-    itemsOnScreen = 9
-    rowWidth = 103
     offset = 5
-    
     y1 += offset
     y2 -= offset
     row = getRow(img, x1, y1, x2, y2)
@@ -484,15 +483,17 @@ def getMinimumPriceOfAllArcana():
     items_arcana_types = ['mote', 'wisp', 'essence', 'quintessence']
     items_arcana_elements = ['life', 'death', 'soul', 'fire', 'earth', 'air', 'water']
 
-    openTradingPost()
+    items_arcana_types = ['mote']
+    items_arcana_elements = ['life', 'death']
 
     rowsData = []
     for element_type in items_arcana_elements:
         for tier_type in items_arcana_types:
             target_item = element_type + ' ' + tier_type
+            getTradingPost()
             getToItemScreen(target_item)
             img = windowCapture()
-            cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
+            # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
             rowData = getMinimumPrice(img)
             rowsData.append(rowData)
 
@@ -525,12 +526,24 @@ def isTradingPostOpen():
     for c1, c2 in zip(average, average_header):
         delta += (c2-c1)*(c2-c1)
     delta = delta**0.5
-    
-    if delta <= 1:
+    print(delta)
+    if delta <= 3:
         return True
     else:
         return False        
 
+def openTradingPost():
+    # pyautogui.click(50,50)
+    pyautogui.press('f')
+
+def getTradingPost():
+    while True: 
+        if isTradingPostOpen():
+            return
+        else:
+            openTradingPost()
+            time.sleep(2)
+            
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -541,10 +554,11 @@ if __name__ == "__main__":
     # windowCaptureSave('Yeet')
     # tesseractTest()
     # drawRows()
+    # pyautogui.click(50,50)
 
-    pyautogui.click(50,50)
-    if isTradingPostOpen():
-        selectAllSettlements()
+    getTradingPost()
+    selectAllSettlements()
+    getMinimumPriceOfAllArcana()
     
     # getToItemScreen("soul mote")
     # img = windowCapture()
@@ -561,9 +575,6 @@ if __name__ == "__main__":
 
 '''
 Today
-
-* check that trading post is open
-    * check that top bar is blue
 * saving and loading database
 * timestamping database entries 
 * multi-threading or CUDA for OCR
