@@ -508,6 +508,76 @@ def getMinimumPriceOfAllArcana(database):
     saveDatabase(database)
     print(database)
 
+class SingleItemClass:
+    def __init__(self, item_name, image, datetime_of_image):
+        self.item_name = item_name
+        self.image = image
+        self.datetime_of_image = datetime_of_image
+
+screen = ScreenClass(1440, 3440)
+class ScreenClass:
+    def __init__(self, vertical_resolution, horizontal_resolution):
+        self.vertical_resolution = vertical_resolution
+        self.horizontal_resolution = horizontal_resolution
+        # actually hold up, the image will have a vert and horiz
+        # if we do screen capture then we know the resolution
+    
+
+def setupScreenClass(screen_class):
+    screen_class.items_on_screen = 9
+
+
+
+def getItemData(list_of_items):
+    datetime_start = datetime.now(timezone.utc)
+    for item_name in list_of_items:
+        getTradingPost()
+        getToItemScreen(item_name)
+        datetime_of_image = datetime.now(timezone.utc)
+        image = windowCapture()
+        item_object = SingleItemClass(item_name, image, datetime_now)
+
+
+
+        x1 = 3182-1920
+        y1 = 423
+        x2 = 4780-1920
+        y2 = 525
+        
+        rowsData = []
+
+        itemsOnScreen = 9
+        rowWidth = 103
+        offset = 5
+        for i in range(itemsOnScreen):
+            y1 += offset
+            y2 -= offset
+            row = getRow(image, x1, y1, x2, y2)
+            rowData = processRowMinimal(row)
+            rowsData.append(rowData)    
+            y1 += rowWidth - offset 
+            y2 += rowWidth + offset
+
+        df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available"])
+        print(df)
+
+def processRowMinimal(img):
+
+    row = []
+
+    x_offset = 3182
+    left_bound = 468
+    right_bound = 656
+    price = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextPrice(price))
+
+    left_bound = 1188
+    right_bound = 1270
+    quantity_available = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextAvail(quantity_available))
+
+    return row
+        
 
 def isTradingPostOpen(): 
     '''
@@ -592,13 +662,33 @@ if __name__ == "__main__":
 
 '''
 Today
+* clear badly formatted entries (None None None)
+* make automatic database backups once a day? 
 
+* put together a list of basic resources and commidities to start tracking
+* gather first page of data since minimum costs will be more obvious
+* modify single item gather because we know what we are gathering 
+
+* add support for all screen resolutions
+    * requires rewriting every screen access in percentage terms
+    * would probably take 3-4 hours
+* once we have enough data, we need to make a visualizer
+    * it would be super cool to make a website
+    * first though, we should just use Jupyter notebooks
 
 * finding highest local buy order 
 * multi-threading or CUDA for OCR
 * build a test suite
-'''
 
+* can use NWDB tooltip syndication (https://nwdb.info/tooltips)
+'''
+# TODO first item is always lowest price, can you use this info as a contstraint
+# TODO manually check first row for correct information? 
+# TODO mine the New World database to only include words that are actually contained within the game
+    # would be hilarious to make a massive hash table that included every possible game item
+# TODO Add checking to determine if we've slightly misspelled one of the words we're looking for 
+# TODO would be intersting to track number of players online through time and see what effect it has on prices
+# TODO also updates may affect prices
 
 '''
 Ojbective
@@ -641,8 +731,55 @@ Location = ["Windsward", "Monarch's Bluff", ]
 
 '''
 
-# TODO first item is always lowest price, can you use this info as a contstraint
-# TODO manually check first row for correct information? 
-# TODO mine the New World database to only include words that are actually contained within the game
-    # would be hilarious to make a massive hash table that included every possible game item
-# TODO Add checking to determine if we've slightly misspelled one of the words we're looking for 
+
+item_list = [
+    "green wood",
+    "aged wood",
+    "timber",
+    "lumber",
+    "iron ore",
+    "iron ingot",
+    "steel ingot",
+    
+    
+
+]
+
+item_food = [
+    
+]
+
+item_epics = [
+    "void ore",
+    "voidbent ingot",
+    "stacked deck",
+    "weighted dice"
+
+]
+
+item_tiers = [
+    "weak",
+    "common",
+    "strong",
+    "powerful",
+    "infused",
+]
+
+item_health = []
+for tier in item_tiers:
+    item_health.append(tier + " health potion")
+
+
+
+item_extras = [
+    
+    "wyrdwood",
+    "ironwood",
+    "wyrdwood planks",
+    "ironwood planks",
+    "glittering ebony",
+    "starmetal ingot",
+    "orichalcum ingot",
+    "asmodeum"
+]
+
