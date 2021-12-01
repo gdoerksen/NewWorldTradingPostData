@@ -142,3 +142,5 @@ dmypy.json
 # selected files
 WhiteTrack.py
 samplyTesseract.py
+test.py
+utilities.py

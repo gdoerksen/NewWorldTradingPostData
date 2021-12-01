@@ -15,7 +15,7 @@ import time
 from sklearn.cluster import KMeans
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
-
+import items
 
 def listWindowNames():
     def winEnumHandler(hwnd, ctx):
@@ -514,52 +514,41 @@ class SingleItemClass:
         self.image = image
         self.datetime_of_image = datetime_of_image
 
-screen = ScreenClass(1440, 3440)
-class ScreenClass:
-    def __init__(self, vertical_resolution, horizontal_resolution):
-        self.vertical_resolution = vertical_resolution
-        self.horizontal_resolution = horizontal_resolution
-        # actually hold up, the image will have a vert and horiz
-        # if we do screen capture then we know the resolution
-    
-
-def setupScreenClass(screen_class):
-    screen_class.items_on_screen = 9
-
-
 
 def getItemData(list_of_items):
     datetime_start = datetime.now(timezone.utc)
+
+    data_list = []
     for item_name in list_of_items:
         getTradingPost()
         getToItemScreen(item_name)
         datetime_of_image = datetime.now(timezone.utc)
         image = windowCapture()
-        item_object = SingleItemClass(item_name, image, datetime_now)
+        item_object = SingleItemClass(item_name, image, datetime_of_image)
 
-
-
-        x1 = 3182-1920
+        x1 = 1262
         y1 = 423
-        x2 = 4780-1920
-        y2 = 525
-        
-        rowsData = []
+        x2 = 2860
+        y2 = 525   
 
-        itemsOnScreen = 9
-        rowWidth = 103
+        items_on_screen = 9
+        row_width = 103
         offset = 5
-        for i in range(itemsOnScreen):
+        for i in range(items_on_screen):
             y1 += offset
             y2 -= offset
-            row = getRow(image, x1, y1, x2, y2)
-            rowData = processRowMinimal(row)
-            rowsData.append(rowData)    
-            y1 += rowWidth - offset 
-            y2 += rowWidth + offset
+            row_image = getRow(image, x1, y1, x2, y2)
+            data_row = processRowMinimal(row_image)
+            data_row.insert(0,item_name)
+            data_row.insert(0,datetime_of_image)
+            data_row.insert(0,datetime_start)
+            data_list.append(data_row)    
+            y1 += row_width - offset 
+            y2 += row_width + offset
 
-        df = pd.DataFrame(rowsData, columns=["Name", "Price", "Amount Available"])
-        print(df)
+    db = pd.DataFrame(data_list, columns=["Run Started", "Data Recorded", "Name", "Price", "Amount Available"])
+    return db
+
 
 def processRowMinimal(img):
 
@@ -622,12 +611,12 @@ def getTradingPost():
             openTradingPost()
             time.sleep(2)
             
-def loadDatabase():
+def loadDatabase(path_to_database="./database.pkl"):
     #TODO transfer to JSON files 
-    return pd.read_pickle("./database.pkl")
+    return pd.read_pickle(path_to_database)
 
-def saveDatabase(db):
-    db.to_pickle("./database.pkl")
+def saveDatabase(database_dataframe, database_file_name):
+    database_dataframe.to_pickle("./" + database_file_name + ".pkl")
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -639,12 +628,25 @@ if __name__ == "__main__":
     # tesseractTest()
     # drawRows()
 
-    database = loadDatabase()
-    print(database)
+    item_list = [
+        "green wood",
+        #"aged wood", # gives back a fishing rod
+        "timber", 
+        #"lumber", # lumberjack gloves lol
+        "iron ore",
+        "iron ingot",
+        "steel ingot",
+    ]
+
+    pyautogui.click(50,50)
+    getTradingPost()
+
+    db = getItemData(item_list)
+    saveDatabase(db,"item_prices")
 
     # pyautogui.click(50,50)
     # getTradingPost()
-    # selectAllSettlements()
+    
     # getMinimumPriceOfAllArcana(database)
     
     # getToItemScreen("soul mote")
@@ -657,7 +659,7 @@ if __name__ == "__main__":
     # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
     # pyautogui.alert('This is the message to display.')
     # pyautogui.confirm(text='U good bro?', title='Wazzz up', buttons=['OK', 'Cancel'])
-    print(pyautogui.position())
+    # print(pyautogui.position())
 
 
 '''
@@ -731,55 +733,4 @@ Location = ["Windsward", "Monarch's Bluff", ]
 
 '''
 
-
-item_list = [
-    "green wood",
-    "aged wood",
-    "timber",
-    "lumber",
-    "iron ore",
-    "iron ingot",
-    "steel ingot",
-    
-    
-
-]
-
-item_food = [
-    
-]
-
-item_epics = [
-    "void ore",
-    "voidbent ingot",
-    "stacked deck",
-    "weighted dice"
-
-]
-
-item_tiers = [
-    "weak",
-    "common",
-    "strong",
-    "powerful",
-    "infused",
-]
-
-item_health = []
-for tier in item_tiers:
-    item_health.append(tier + " health potion")
-
-
-
-item_extras = [
-    
-    "wyrdwood",
-    "ironwood",
-    "wyrdwood planks",
-    "ironwood planks",
-    "glittering ebony",
-    "starmetal ingot",
-    "orichalcum ingot",
-    "asmodeum"
-]
 
