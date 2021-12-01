@@ -628,15 +628,7 @@ if __name__ == "__main__":
     # tesseractTest()
     # drawRows()
 
-    item_list = [
-        "green wood",
-        #"aged wood", # gives back a fishing rod
-        "timber", 
-        #"lumber", # lumberjack gloves lol
-        "iron ore",
-        "iron ingot",
-        "steel ingot",
-    ]
+    item_list = items.item_arcana
 
     pyautogui.click(50,50)
     getTradingPost()
@@ -646,9 +638,7 @@ if __name__ == "__main__":
 
     # pyautogui.click(50,50)
     # getTradingPost()
-    
-    # getMinimumPriceOfAllArcana(database)
-    
+        
     # getToItemScreen("soul mote")
     # img = windowCapture()
     # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
@@ -658,79 +648,8 @@ if __name__ == "__main__":
     # print(pyautogui.size())
     # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
     # pyautogui.alert('This is the message to display.')
-    # pyautogui.confirm(text='U good bro?', title='Wazzz up', buttons=['OK', 'Cancel'])
     # print(pyautogui.position())
 
 
-'''
-Today
-* clear badly formatted entries (None None None)
-* make automatic database backups once a day? 
-
-* put together a list of basic resources and commidities to start tracking
-* gather first page of data since minimum costs will be more obvious
-* modify single item gather because we know what we are gathering 
-
-* add support for all screen resolutions
-    * requires rewriting every screen access in percentage terms
-    * would probably take 3-4 hours
-* once we have enough data, we need to make a visualizer
-    * it would be super cool to make a website
-    * first though, we should just use Jupyter notebooks
-
-* finding highest local buy order 
-* multi-threading or CUDA for OCR
-* build a test suite
-
-* can use NWDB tooltip syndication (https://nwdb.info/tooltips)
-'''
-# TODO first item is always lowest price, can you use this info as a contstraint
-# TODO manually check first row for correct information? 
-# TODO mine the New World database to only include words that are actually contained within the game
-    # would be hilarious to make a massive hash table that included every possible game item
-# TODO Add checking to determine if we've slightly misspelled one of the words we're looking for 
-# TODO would be intersting to track number of players online through time and see what effect it has on prices
-# TODO also updates may affect prices
-
-'''
-Ojbective
-* Get the global prices of soul motes 
-
-Steps
-* Trading post can time out so make sure it's always still opened
-    * Save last state so we can go back
-
-* Click "Showing orders at" and scroll up 
-* Click All Settlements
-* Check that All Settlements are selected
-* Close the Settlements selection window
-
-* Search for soul motes in the SEARCH ITEMS bar
-* Check whether item was succesfully found
-* Select soul mote
-* Make sure items are sorted by Price downwards
-* Start grabbing lines
-* Scroll to bottom if applicable (currently this will miss two middle rows)
-* Go to next page (if applicable)
-* repeat for all pages 
-
-* repeat for all wanted items
-
-* save data into database
-* generate report
-
-
-Price "XXXX.XX" 
-Tier = ["I", "II", "III", "IV", "V"] 
-G.S.: Number or -
-Gem: 
-Perk: "Symbols so don't do this one"
-RarityList = ["Common", "Uncommon", "Rare", "Epic", "Legendary" ]
-Avail.: Integer  
-Owned: Integer
-Time: ["2d", "1m", "1h"]
-Location = ["Windsward", "Monarch's Bluff", ]
-
-'''
 
 
