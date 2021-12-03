@@ -54,7 +54,6 @@ def windowCapture():
 
     return img
 
-
 def windowCaptureRealtime():
     loop_time = time()
     while(True):
@@ -80,22 +79,6 @@ def windowCaptureSave(filename):
     im.save(filename + '.jpeg')
     # TODO Color channels are wrong currently, Orange = Blue 
 
-def tesseractTest(img):
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # thresh, img_bin = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # gray = cv2.bitwise_not(img_bin)
-
-    d = pytesseract.image_to_data(img, output_type=Output.DICT)
-    print(d.keys())
-    n_boxes = len(d['text'])
-    for i in range(n_boxes):
-        if float(d['conf'][i]) > 60:
-            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
-            img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    cv2.imshow('img', img)
-    cv2.waitKey(0)
-
 def whiteThreshold(image, vMin=78):
     hMin = sMin = 0
     vMin = vMin
@@ -118,7 +101,6 @@ def binaryThreshold(img, threshold):
 
 def grayscale(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
 
 def drawSquareOnImage(img, x1: int, y1: int, x2: int, y2: int):
     green = (0, 255, 0)
@@ -161,20 +143,6 @@ def identifyText(img):
     # data = pytesseract.image_to_data(img)
     data = pytesseract.image_to_string(img)
     return data
-    
-class Row():
-    def __init__(self, img, rowItems=[]):
-        self.img = img
-        self.rowItems = rowItems
-
-
-class RowItem():
-    def __init__(self, left_bound, right_bound, img=None, value=None, pattern=None):
-        self.left_bound = left_bound
-        self.right_bound = right_bound
-        self.img = img
-        self.value = value
-        self.pattern = pattern
 
 def preprocessItem(img, vMin):
     img = whiteThreshold(img, vMin)
@@ -491,43 +459,7 @@ def getMinimumPrice(img):
     rowData = processRow(row)
     return rowData
 
-def getMinimumPriceOfAllArcana(database):
-    datetime_start = datetime.now(timezone.utc)
-
-    items_arcana_types = ['mote', 'wisp', 'essence', 'quintessence']
-    items_arcana_elements = ['life', 'death', 'soul', 'fire', 'earth', 'air', 'water']
-
-    # items_arcana_types = ['mote']
-    # items_arcana_elements = ['life', 'death']
-
-    rowsData = []
-    for element_type in items_arcana_elements:
-        for tier_type in items_arcana_types:
-            target_item = element_type + ' ' + tier_type
-            getTradingPost()
-            getToItemScreen(target_item)
-            datetime_now = datetime.now(timezone.utc)
-            img = windowCapture()
-            # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
-            rowData = getMinimumPrice(img)
-            rowData.insert(0,datetime_now)
-            rowData.insert(0,datetime_start)
-            rowsData.append(rowData)
-
-    # database = pd.DataFrame(rowsData, columns=["Start Time", "Time", "Name", "Price", "Amount Available", "Time Available", "Location"])
-    update_database = pd.DataFrame(rowsData, columns=["Start Time", "Time", "Name", "Price", "Amount Available", "Time Available", "Location"])
-    database = pd.concat( [database, update_database], ignore_index=True, sort=False )
-    saveDatabase(database)
-    print(database)
-
-class SingleItemClass:
-    def __init__(self, item_name, image, datetime_of_image):
-        self.item_name = item_name
-        self.image = image
-        self.datetime_of_image = datetime_of_image
-
-
-def getItemData(list_of_items):
+def getItemData(list_of_items, items_on_screen=9):
     datetime_start = datetime.now(timezone.utc)
 
     data_list = []
@@ -536,14 +468,12 @@ def getItemData(list_of_items):
         getToItemScreen(item_name)
         datetime_of_image = datetime.now(timezone.utc)
         image = windowCapture()
-        item_object = SingleItemClass(item_name, image, datetime_of_image)
 
         x1 = 1262
         y1 = 423
         x2 = 2860
         y2 = 525   
 
-        items_on_screen = 9
         row_width = 103
         offset = 5
         for i in range(items_on_screen):
@@ -633,40 +563,18 @@ def saveDatabase(database_dataframe, database_file_name):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # screenWidth, screenHeight = pyautogui.size() # Get the size of the primary monitor.
-    # currentMouseX, currentMouseY = pyautogui.position() # Get the XY position of the mouse.
-    # windowCaptureRealtime()
-    # listWindowNames()
-    # windowCaptureSave('Yeet')
-    # tesseractTest()
-    # drawRows()
 
-    target_item='air mote'
+    item_list = items.item_arcana
     pyautogui.click(50,50)
-    getSellOrderScreen(target_item)
+    getTradingPost()
 
-    # item_list = items.item_arcana
+    item_list = items.item_arcana
 
-    # pyautogui.click(50,50)
-    # getTradingPost()
-
-    # db = getItemData(item_list)
-    # saveDatabase(db,"item_prices")
-
-    # pyautogui.click(50,50)
-    # getTradingPost()
+    db = getItemData(item_list,1)
+    saveDatabase(db,"item_prices_2")
         
 
-
-    # getToItemScreen("soul mote")
-    # img = windowCapture()
-    # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
-    # getMeThatData(img)
-    # singleItemData(img)
-
-    # print(pyautogui.size())
-    # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
-    # pyautogui.alert('This is the message to display.')
-    print(pyautogui.position())
+    # print(pyautogui.position())
 
 
 
