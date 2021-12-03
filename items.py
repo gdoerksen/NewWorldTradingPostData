@@ -1,27 +1,16 @@
-
-item_list = [
-    "green wood",
-    "aged wood",
-    "timber",
-    "lumber",
-    "iron ore",
-    "iron ingot",
-    "steel ingot",
- ]
-
 # RESOURCES
 
 ## RAW RESOURCES
 
 item_woods = [
     "green wood",
-    "aged wood",
+    #"aged wood", # 2
     "petrified wood",
-    "whisperwood",
+    #"whisperwood", # 4
     "wyrdwood",
     "quillbark",
     "ebonwood",
-    "ironwood",
+    # "ironwood", # 3
     "wildwood",
     "barbvine",
 ]
@@ -40,12 +29,12 @@ item_crafting_components = [
 ]
 
 item_oil = [
-    "oil",
+    # "oil",
 ]
 
 item_stones = [
-    "stone",
-    "lodestone",
+    # "stone",
+    # "lodestone",
 ]
 
 item_fishing_salvage = [
@@ -78,15 +67,15 @@ item_feathers = [
 item_rawhides = [
     "rawhide",
     "ragehide",
-    "fur",
+    # "fur",
     "scaly hide",
-    "shadowfur",
+    # "shadowfur", # 2
     "thick hide",
     "thick fur",
     "brightscale hide",
     "shifthide",
     "iron hide",
-    "infused fur",
+    # "infused fur",
     "smolderhide",
     "scarhide",
 ]
@@ -96,7 +85,7 @@ item_raw_gemstones = [
 ]
 
 item_flints = [
-    "flint"
+    # "flint"
 ]
 
 item_precious_ores = [
@@ -113,7 +102,7 @@ item_gunpowder = [
 
 item_refined_stone = [
     "stone block", 
-    "stone brick",
+    # "stone brick",
     "lodestone brick",
     "obsidian voidstone",
     "runestone",
@@ -129,7 +118,7 @@ item_cut_gemstones = [
 
 item_refined_wood = [
     "timber",
-    "lumber",
+    # "lumber",
     "wyrdwood planks",
     "ironwood planks",
     "glittering ebony",
@@ -142,10 +131,10 @@ item_precious_ingot = [
 ]
 
 item_leather = [
-    "coarse leather",
-    "rugged leather",
-    "layered leather",
-    "infused leather",
+    # "coarse leather",
+    # "rugged leather",
+    # "layered leather",
+    # "infused leather",
     "runic leather",
 ]
 
@@ -159,10 +148,10 @@ item_ingot = [
 
 item_clotch = [
     "linen",
-    "sateen",
-    "silk",
-    "infused silk",
-    "pheonixweave",
+    # "sateen",
+    # "silk",
+    # "infused silk",
+    "phoenixweave",
 ]
 
 ## COOKING INGREDIENTS
