@@ -454,6 +454,18 @@ def selectAllSettlements():
     pyautogui.click(interval=click_duration)
     
 
+def getBuyOrderScreen(target_item):
+    getTradingPost()
+    getToItemScreen(target_item)
+    pyautogui.moveTo(908, 899, duration=0.2, tween=pyautogui.easeInOutQuad)
+    pyautogui.click()
+
+def getSellOrderScreen(target_item):
+    getTradingPost()
+    getToItemScreen(target_item)
+    pyautogui.moveTo(927, 984, duration=0.2, tween=pyautogui.easeInOutQuad)
+    pyautogui.click()
+
 def getToItemScreen(target_item):
     # pyautogui.click(759,297,duration=0.3)
     pyautogui.moveTo(759, 297, duration=0.2, tween=pyautogui.easeInOutQuad)
@@ -628,17 +640,23 @@ if __name__ == "__main__":
     # tesseractTest()
     # drawRows()
 
-    item_list = items.item_arcana
-
+    target_item='air mote'
     pyautogui.click(50,50)
-    getTradingPost()
+    getSellOrderScreen(target_item)
 
-    db = getItemData(item_list)
-    saveDatabase(db,"item_prices")
+    # item_list = items.item_arcana
+
+    # pyautogui.click(50,50)
+    # getTradingPost()
+
+    # db = getItemData(item_list)
+    # saveDatabase(db,"item_prices")
 
     # pyautogui.click(50,50)
     # getTradingPost()
         
+
+
     # getToItemScreen("soul mote")
     # img = windowCapture()
     # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
@@ -648,7 +666,7 @@ if __name__ == "__main__":
     # print(pyautogui.size())
     # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
     # pyautogui.alert('This is the message to display.')
-    # print(pyautogui.position())
+    print(pyautogui.position())
 
 
 
