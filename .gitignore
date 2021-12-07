@@ -142,3 +142,7 @@ dmypy.json
 # selected files
 WhiteTrack.py
 samplyTesseract.py
+test.py
+utilities.py
+TODO.md
+item_prices_2.pkl

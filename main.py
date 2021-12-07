@@ -15,7 +15,7 @@ import time
 from sklearn.cluster import KMeans
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
-
+import items
 
 def listWindowNames():
     def winEnumHandler(hwnd, ctx):
@@ -54,7 +54,6 @@ def windowCapture():
 
     return img
 
-
 def windowCaptureRealtime():
     loop_time = time()
     while(True):
@@ -80,22 +79,6 @@ def windowCaptureSave(filename):
     im.save(filename + '.jpeg')
     # TODO Color channels are wrong currently, Orange = Blue 
 
-def tesseractTest(img):
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # thresh, img_bin = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # gray = cv2.bitwise_not(img_bin)
-
-    d = pytesseract.image_to_data(img, output_type=Output.DICT)
-    print(d.keys())
-    n_boxes = len(d['text'])
-    for i in range(n_boxes):
-        if float(d['conf'][i]) > 60:
-            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
-            img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    cv2.imshow('img', img)
-    cv2.waitKey(0)
-
 def whiteThreshold(image, vMin=78):
     hMin = sMin = 0
     vMin = vMin
@@ -118,7 +101,6 @@ def binaryThreshold(img, threshold):
 
 def grayscale(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
 
 def drawSquareOnImage(img, x1: int, y1: int, x2: int, y2: int):
     green = (0, 255, 0)
@@ -161,20 +143,6 @@ def identifyText(img):
     # data = pytesseract.image_to_data(img)
     data = pytesseract.image_to_string(img)
     return data
-    
-class Row():
-    def __init__(self, img, rowItems=[]):
-        self.img = img
-        self.rowItems = rowItems
-
-
-class RowItem():
-    def __init__(self, left_bound, right_bound, img=None, value=None, pattern=None):
-        self.left_bound = left_bound
-        self.right_bound = right_bound
-        self.img = img
-        self.value = value
-        self.pattern = pattern
 
 def preprocessItem(img, vMin):
     img = whiteThreshold(img, vMin)
@@ -454,6 +422,18 @@ def selectAllSettlements():
     pyautogui.click(interval=click_duration)
     
 
+def getBuyOrderScreen(target_item):
+    getTradingPost()
+    getToItemScreen(target_item)
+    pyautogui.moveTo(908, 899, duration=0.2, tween=pyautogui.easeInOutQuad)
+    pyautogui.click()
+
+def getSellOrderScreen(target_item):
+    getTradingPost()
+    getToItemScreen(target_item)
+    pyautogui.moveTo(927, 984, duration=0.2, tween=pyautogui.easeInOutQuad)
+    pyautogui.click()
+
 def getToItemScreen(target_item):
     # pyautogui.click(759,297,duration=0.3)
     pyautogui.moveTo(759, 297, duration=0.2, tween=pyautogui.easeInOutQuad)
@@ -479,35 +459,56 @@ def getMinimumPrice(img):
     rowData = processRow(row)
     return rowData
 
-def getMinimumPriceOfAllArcana(database):
+def getItemData(list_of_items, items_on_screen=9):
     datetime_start = datetime.now(timezone.utc)
 
-    items_arcana_types = ['mote', 'wisp', 'essence', 'quintessence']
-    items_arcana_elements = ['life', 'death', 'soul', 'fire', 'earth', 'air', 'water']
+    data_list = []
+    for item_name in list_of_items:
+        getTradingPost()
+        getToItemScreen(item_name)
+        datetime_of_image = datetime.now(timezone.utc)
+        image = windowCapture()
 
-    # items_arcana_types = ['mote']
-    # items_arcana_elements = ['life', 'death']
+        x1 = 1262
+        y1 = 423
+        x2 = 2860
+        y2 = 525   
 
-    rowsData = []
-    for element_type in items_arcana_elements:
-        for tier_type in items_arcana_types:
-            target_item = element_type + ' ' + tier_type
-            getTradingPost()
-            getToItemScreen(target_item)
-            datetime_now = datetime.now(timezone.utc)
-            img = windowCapture()
-            # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
-            rowData = getMinimumPrice(img)
-            rowData.insert(0,datetime_now)
-            rowData.insert(0,datetime_start)
-            rowsData.append(rowData)
+        row_width = 103
+        offset = 5
+        for i in range(items_on_screen):
+            y1 += offset
+            y2 -= offset
+            row_image = getRow(image, x1, y1, x2, y2)
+            data_row = processRowMinimal(row_image)
+            data_row.insert(0,item_name)
+            data_row.insert(0,datetime_of_image)
+            data_row.insert(0,datetime_start)
+            data_list.append(data_row)    
+            y1 += row_width - offset 
+            y2 += row_width + offset
 
-    # database = pd.DataFrame(rowsData, columns=["Start Time", "Time", "Name", "Price", "Amount Available", "Time Available", "Location"])
-    update_database = pd.DataFrame(rowsData, columns=["Start Time", "Time", "Name", "Price", "Amount Available", "Time Available", "Location"])
-    database = pd.concat( [database, update_database], ignore_index=True, sort=False )
-    saveDatabase(database)
-    print(database)
+    db = pd.DataFrame(data_list, columns=["Run Started", "Data Recorded", "Name", "Price", "Amount Available"])
+    return db
 
+
+def processRowMinimal(img):
+
+    row = []
+
+    x_offset = 3182
+    left_bound = 468
+    right_bound = 656
+    price = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextPrice(price))
+
+    left_bound = 1188
+    right_bound = 1270
+    quantity_available = sliceRow(img, left_bound, right_bound)
+    row.append(identifyTextAvail(quantity_available))
+
+    return row
+        
 
 def isTradingPostOpen(): 
     '''
@@ -552,97 +553,29 @@ def getTradingPost():
             openTradingPost()
             time.sleep(2)
             
-def loadDatabase():
+def loadDatabase(path_to_database="./database.pkl"):
     #TODO transfer to JSON files 
-    return pd.read_pickle("./database.pkl")
+    return pd.read_pickle(path_to_database)
 
-def saveDatabase(db):
-    db.to_pickle("./database.pkl")
+def saveDatabase(database_dataframe, database_file_name):
+    database_dataframe.to_pickle("./" + database_file_name + ".pkl")
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # screenWidth, screenHeight = pyautogui.size() # Get the size of the primary monitor.
-    # currentMouseX, currentMouseY = pyautogui.position() # Get the XY position of the mouse.
-    # windowCaptureRealtime()
-    # listWindowNames()
-    # windowCaptureSave('Yeet')
-    # tesseractTest()
-    # drawRows()
 
-    database = loadDatabase()
-    print(database)
+    item_list = items.item_arcana
+    pyautogui.click(50,50)
+    getTradingPost()
 
-    # pyautogui.click(50,50)
-    # getTradingPost()
-    # selectAllSettlements()
-    # getMinimumPriceOfAllArcana(database)
-    
-    # getToItemScreen("soul mote")
-    # img = windowCapture()
-    # cv2.imwrite( "test_" + target_item.replace(' ', '_') + ".jpeg",img)
-    # getMeThatData(img)
-    # singleItemData(img)
+    item_list = items.item_arcana
 
-    # print(pyautogui.size())
-    # pyautogui.moveTo(500, 500, duration=2, tween=pyautogui.easeInOutQuad)
-    # pyautogui.alert('This is the message to display.')
-    # pyautogui.confirm(text='U good bro?', title='Wazzz up', buttons=['OK', 'Cancel'])
-    print(pyautogui.position())
+    db = getItemData(item_list,1)
+    saveDatabase(db,"item_prices_2")
+        
+
+    # print(pyautogui.position())
 
 
-'''
-Today
 
 
-* finding highest local buy order 
-* multi-threading or CUDA for OCR
-* build a test suite
-'''
-
-
-'''
-Ojbective
-* Get the global prices of soul motes 
-
-Steps
-* Trading post can time out so make sure it's always still opened
-    * Save last state so we can go back
-
-* Click "Showing orders at" and scroll up 
-* Click All Settlements
-* Check that All Settlements are selected
-* Close the Settlements selection window
-
-* Search for soul motes in the SEARCH ITEMS bar
-* Check whether item was succesfully found
-* Select soul mote
-* Make sure items are sorted by Price downwards
-* Start grabbing lines
-* Scroll to bottom if applicable (currently this will miss two middle rows)
-* Go to next page (if applicable)
-* repeat for all pages 
-
-* repeat for all wanted items
-
-* save data into database
-* generate report
-
-
-Price "XXXX.XX" 
-Tier = ["I", "II", "III", "IV", "V"] 
-G.S.: Number or -
-Gem: 
-Perk: "Symbols so don't do this one"
-RarityList = ["Common", "Uncommon", "Rare", "Epic", "Legendary" ]
-Avail.: Integer  
-Owned: Integer
-Time: ["2d", "1m", "1h"]
-Location = ["Windsward", "Monarch's Bluff", ]
-
-'''
-
-# TODO first item is always lowest price, can you use this info as a contstraint
-# TODO manually check first row for correct information? 
-# TODO mine the New World database to only include words that are actually contained within the game
-    # would be hilarious to make a massive hash table that included every possible game item
-# TODO Add checking to determine if we've slightly misspelled one of the words we're looking for 
